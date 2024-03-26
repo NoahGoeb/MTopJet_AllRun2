@@ -72,6 +72,74 @@ private:
 
 };
 
+class CombineXCone3all_gen: public uhh2::AnalysisModule{
+public:
+
+  explicit CombineXCone3all_gen(uhh2::Context &, uint, const std::string &, const std::string &);
+  virtual bool process(uhh2::Event & ) override;
+
+private:
+
+  uhh2::Event::Handle<std::vector<GenTopJet>>h_GENxcone3alljets;
+  uhh2::Event::Handle<std::vector<GenTopJet>>h_GENfatjets;
+  uhh2::Event::Handle<TTbarGen> h_ttbargen;
+  uint nJets_;
+  // TTbarGen ttbargen;
+
+};
+
+class CombineXCone3nolep_gen: public uhh2::AnalysisModule{
+public:
+
+  explicit CombineXCone3nolep_gen(uhh2::Context &, bool, bool, float, const std::string &, const std::string &);
+  virtual bool process(uhh2::Event & ) override;
+
+private:
+
+  uhh2::Event::Handle<std::vector<GenTopJet>>h_GENxcone3nolepjets;
+  uhh2::Event::Handle<std::vector<GenTopJet>>h_GENfatjets;
+  uhh2::Event::Handle<TTbarGen> h_ttbargen;
+  bool isTTbar_;
+  bool doPtdR_;
+  float dR_;
+  // TTbarGen ttbargen;
+
+};
+
+class CombineXCone3top_gluon_gen: public uhh2::AnalysisModule{
+public:
+
+  explicit CombineXCone3top_gluon_gen(uhh2::Context &, bool, bool, float, const std::string &, const std::string &, const std::string &, const std::string &);
+  virtual bool process(uhh2::Event & ) override;
+
+private:
+
+  uhh2::Event::Handle<std::vector<GenTopJet>> h_GENxcone3topjets, h_GENxcone3gluonjets, h_GENxcone3lepjets;
+  uhh2::Event::Handle<std::vector<GenTopJet>> h_GENfatjets;
+  uhh2::Event::Handle<TTbarGen> h_ttbargen;
+  bool isTTbar_;
+  bool doPtdR_;
+  float dR_;
+  // TTbarGen ttbargen;
+
+};
+
+class CombineXCone3noNearestLep_gen: public uhh2::AnalysisModule{
+public:
+
+  explicit CombineXCone3noNearestLep_gen(uhh2::Context &, bool, const std::string &, const std::string &);
+  virtual bool process(uhh2::Event & ) override;
+
+private:
+
+  uhh2::Event::Handle<std::vector<GenTopJet>>h_GENxcone3noNearestLepjets;
+  uhh2::Event::Handle<std::vector<GenTopJet>>h_GENfatjets;
+  uhh2::Event::Handle<TTbarGen> h_ttbargen;
+  bool isTTbar_;
+  // TTbarGen ttbargen;
+
+};
+
 class CombineXConeAllHad: public uhh2::AnalysisModule{
 public:
 

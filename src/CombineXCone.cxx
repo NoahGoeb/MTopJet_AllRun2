@@ -1,4 +1,5 @@
 #include <UHH2/MTopJet/include/CombineXCone.h>
+#include <UHH2/MTopJet/include/GenHists_GenOnly.h>
 
 // TODO: remove ptcut from combine
 
@@ -93,20 +94,20 @@ GenTopJet CombineXCone::CreateTopJetFromSubjets_gen(vector<GenJet> subjets, doub
   // first store subjets
   for(auto sj: subjets) jet.add_subjet(sj);
   // only combine if all subjets have pt > ptmin
-  bool good_jet = true;
+  /*bool good_jet = true;
   for(unsigned int i=0; i < subjets.size(); ++i){
     if(subjets.at(i).pt() < ptmin) good_jet = false;
     if(subjets.at(i).eta() > etamax) good_jet = false;
     if(subjets.at(i).eta() < -etamax) good_jet = false;
   }
-  if(good_jet){
+  if(good_jet){*/
     for(unsigned int i=0; i < subjets.size(); ++i){
       px += subjets.at(i).v4().Px();
       py += subjets.at(i).v4().Py();
       pz += subjets.at(i).v4().Pz();
       E += subjets.at(i).v4().E();
     }
-  }
+  //}
   jet_v4.SetPxPyPzE(px, py, pz, E);
   jet.set_pt(jet_v4.Pt());
   jet.set_eta(jet_v4.Eta());
@@ -139,6 +140,28 @@ TopJet CombineXCone::FindHadjet(uhh2::Event &event, const vector<TopJet>& fatjet
   }
 
   return fathadjet;
+}
+
+GenParticle* gluonInEvent(const Event & event) {
+  std::vector<GenParticle> *genparticles = event.genparticles;
+  int nparts = genparticles->size();
+  
+  GenParticle* gluon = nullptr;
+  //look for outgoing gluons in jet
+  for(int i=0; i<nparts; ++i) {
+    GenParticle* p = &(genparticles->at(i));
+
+    auto mother1 = p->mother(genparticles,1);
+    auto mother2 = p->mother(genparticles,2);
+
+    if(mother1 != nullptr && mother2 != nullptr) {
+      if(abs(p->pdgId()) != 6 && mother1->status() == 21 && mother2->status() == 21) {
+        if(p->pt() > 5) gluon = p;
+      }
+    }
+  }
+
+  return gluon;
 }
 
 /*
@@ -408,6 +431,259 @@ bool CombineXCone33_gen::process(uhh2::Event & event){
   //---------------------------------------------------------------------------------------
   event.set(h_GENxcone33hadjets, hadjets);
   event.set(h_GENxcone33lepjets, lepjets);
+
+  // delete combine;
+  return true;
+}
+
+
+
+CombineXCone3all_gen::CombineXCone3all_gen(uhh2::Context & ctx, uint nJets, const std::string & name_all, const std::string & name_fat):
+h_GENxcone3alljets(ctx.declare_event_output<std::vector<GenTopJet>>(name_all)),
+h_GENfatjets(ctx.get_handle<std::vector<GenTopJet>>(name_fat)),
+h_ttbargen(ctx.get_handle<TTbarGen>("ttbargen")),
+nJets_(nJets) {}
+
+bool CombineXCone3all_gen::process(uhh2::Event & event){
+  //---------------------------------------------------------------------------------------
+  //--------------------------------- get subjets and lepton ------------------------------
+  //---------------------------------------------------------------------------------------
+  GenParticle lepton;
+  std::vector<GenTopJet> jets = event.get(h_GENfatjets);
+  if(jets.size() < nJets_) return false;
+  CombineXCone* combine = new CombineXCone();
+  //---------------------------------------------------------------------------------------
+  //-------- set Lorentz Vectors of subjets and combine them ------------------------------
+  //---------------------------------------------------------------------------------------
+  std::vector<GenTopJet> combinedJets;
+  vector<GenTopJet> alljets;
+  GenTopJet combinedJet;
+
+  for(uint i=0; i<jets.size(); i++) {
+    combinedJet = combine->CreateTopJetFromSubjets_gen(jets.at(i).subjets(), 0, 2.5);
+    combinedJet.set_tau1(jets.at(i).tau1());
+    combinedJet.set_tau2(jets.at(i).tau2());
+    combinedJet.set_tau3(jets.at(i).tau3());
+    combinedJet.set_tau4(jets.at(i).tau4());
+    combinedJet.set_tau1_groomed(jets.at(i).tau1_groomed());
+    combinedJet.set_tau2_groomed(jets.at(i).tau2_groomed());
+    combinedJet.set_tau3_groomed(jets.at(i).tau3_groomed());
+    combinedJet.set_tau4_groomed(jets.at(i).tau4_groomed());
+    alljets.push_back(combinedJet);
+  }
+
+  //---------------------------------------------------------------------------------------
+  //--------------------------------- Write Jets ------------------------------------------
+  //---------------------------------------------------------------------------------------
+  event.set(h_GENxcone3alljets, alljets);
+
+  // delete combine;
+  return true;
+}
+
+CombineXCone3nolep_gen::CombineXCone3nolep_gen(uhh2::Context & ctx, bool isTTbar, bool doPtdR, float dR, const std::string & name_nolep, const std::string & name_fat):
+h_GENxcone3nolepjets(ctx.declare_event_output<std::vector<GenTopJet>>(name_nolep)),
+h_GENfatjets(ctx.get_handle<std::vector<GenTopJet>>(name_fat)),
+h_ttbargen(ctx.get_handle<TTbarGen>("ttbargen")),
+isTTbar_ (isTTbar),
+doPtdR_(doPtdR),
+dR_(dR) {}
+
+bool CombineXCone3nolep_gen::process(uhh2::Event & event){
+  //---------------------------------------------------------------------------------------
+  //--------------------------------- get subjets and lepton ------------------------------
+  //---------------------------------------------------------------------------------------
+  GenParticle lepton;
+  std::vector<GenTopJet> jets = event.get(h_GENfatjets);
+  CombineXCone* combine = new CombineXCone();
+  //---------------------------------------------------------------------------------------
+  //-------- set Lorentz Vectors of subjets and combine them ------------------------------
+  //---------------------------------------------------------------------------------------
+  std::vector<std::vector<GenJet>> subjets;
+  std::vector<GenTopJet> combinedJets;
+  vector<GenTopJet> nolepjets;
+  GenTopJet combinedJet;
+  TLorentzVector combinedJet_v4;
+
+  float dRreal = dR_;
+
+  if(isTTbar_) {
+    TTbarGen ttbargen = event.get(h_ttbargen);
+    if(ttbargen.IsSemiLeptonicDecay()) {
+      lepton = ttbargen.ChargedLepton();
+      for(uint i=0; i<jets.size(); i++) {
+        combinedJet = combine->CreateTopJetFromSubjets_gen(jets.at(i).subjets(), 0, 2.5);
+        combinedJet_v4.SetPxPyPzE(combinedJet.v4().Px(), combinedJet.v4().Py(), combinedJet.v4().Pz(), combinedJet.v4().E());
+
+        if(doPtdR_ && combinedJet_v4.Pt() != 0) dRreal /= combinedJet_v4.Pt();
+
+        combinedJet.set_tau1(jets.at(i).tau1());
+        combinedJet.set_tau2(jets.at(i).tau2());
+        combinedJet.set_tau3(jets.at(i).tau3());
+        combinedJet.set_tau4(jets.at(i).tau4());
+        combinedJet.set_tau1_groomed(jets.at(i).tau1_groomed());
+        combinedJet.set_tau2_groomed(jets.at(i).tau2_groomed());
+        combinedJet.set_tau3_groomed(jets.at(i).tau3_groomed());
+        combinedJet.set_tau4_groomed(jets.at(i).tau4_groomed());
+        if(deltaR(lepton, jets.at(i)) > dRreal) {
+          nolepjets.push_back(combinedJet);
+        }
+      }
+    }
+  }
+
+  
+
+  //---------------------------------------------------------------------------------------
+  //--------------------------------- Write Jets ------------------------------------------
+  //---------------------------------------------------------------------------------------
+  event.set(h_GENxcone3nolepjets, nolepjets);
+
+  // delete combine;
+  return true;
+}
+
+CombineXCone3top_gluon_gen::CombineXCone3top_gluon_gen(uhh2::Context & ctx, bool isTTbar, bool doPtdR, float dR, const std::string & name_top, const std::string & name_gluon, const std::string & name_lep, const std::string & name_fat):
+h_GENxcone3topjets(ctx.declare_event_output<std::vector<GenTopJet>>(name_top)),
+h_GENxcone3gluonjets(ctx.declare_event_output<std::vector<GenTopJet>>(name_gluon)),
+h_GENxcone3lepjets(ctx.declare_event_output<std::vector<GenTopJet>>(name_lep)),
+h_GENfatjets(ctx.get_handle<std::vector<GenTopJet>>(name_fat)),
+h_ttbargen(ctx.get_handle<TTbarGen>("ttbargen")),
+isTTbar_ (isTTbar),
+doPtdR_(doPtdR),
+dR_(dR) {}
+
+bool CombineXCone3top_gluon_gen::process(uhh2::Event & event) {
+  //---------------------------------------------------------------------------------------
+  //--------------------------------- get subjets and lepton ------------------------------
+  //---------------------------------------------------------------------------------------
+  std::vector<GenTopJet> jets = event.get(h_GENfatjets);
+  CombineXCone* combine = new CombineXCone();
+  //---------------------------------------------------------------------------------------
+  //-------- set Lorentz Vectors of subjets and combine them ------------------------------
+  //---------------------------------------------------------------------------------------
+  std::vector<std::vector<GenJet>> subjets;
+  std::vector<GenTopJet> combinedJets;
+  vector<GenTopJet> topjets, gluonjets, lepjets;
+  GenTopJet combinedJet;
+  TLorentzVector combinedJet_v4;
+
+  float dRreal = dR_;
+
+  if(isTTbar_) {
+    TTbarGen ttbargen = event.get(h_ttbargen);
+    //GenParticle * gluonPtr = gluonInEvent(event);
+    GenParticle top, lepton;
+
+    if(ttbargen.IsTopHadronicDecay()) {
+      top = ttbargen.Top();
+    } else if(ttbargen.IsAntiTopHadronicDecay()) {
+      top = ttbargen.Antitop();
+    }
+
+    if(ttbargen.IsSemiLeptonicDecay()) {
+      lepton = ttbargen.ChargedLepton();
+
+      for(uint i=0; i<jets.size(); i++) {
+        combinedJet = combine->CreateTopJetFromSubjets_gen(jets.at(i).subjets(), 0, 2.5);
+        combinedJet_v4.SetPxPyPzE(combinedJet.v4().Px(), combinedJet.v4().Py(), combinedJet.v4().Pz(), combinedJet.v4().E());
+
+        if(doPtdR_ && combinedJet_v4.Pt() != 0) dRreal /= combinedJet_v4.Pt();
+
+        combinedJet.set_tau1(jets.at(i).tau1());
+        combinedJet.set_tau2(jets.at(i).tau2());
+        combinedJet.set_tau3(jets.at(i).tau3());
+        combinedJet.set_tau4(jets.at(i).tau4());
+        combinedJet.set_tau1_groomed(jets.at(i).tau1_groomed());
+        combinedJet.set_tau2_groomed(jets.at(i).tau2_groomed());
+        combinedJet.set_tau3_groomed(jets.at(i).tau3_groomed());
+        combinedJet.set_tau4_groomed(jets.at(i).tau4_groomed());
+        if(deltaR(lepton, jets.at(i)) < dRreal) {
+          lepjets.push_back(combinedJet);
+        } else if(deltaR(top, jets.at(i)) < dRreal) {
+          topjets.push_back(combinedJet);
+        }/* else if(gluonPtr != 0 && deltaR(*gluonPtr, jets.at(i)) < dRreal) {
+          gluonjets.push_back(combinedJet);
+        }*/ else {
+          gluonjets.push_back(combinedJet);
+        }
+      }
+    }
+  }
+
+  //---------------------------------------------------------------------------------------
+  //--------------------------------- Write Jets ------------------------------------------
+  //---------------------------------------------------------------------------------------
+  event.set(h_GENxcone3topjets, topjets);
+  event.set(h_GENxcone3gluonjets, gluonjets);
+  event.set(h_GENxcone3lepjets, lepjets);
+
+  // delete combine;
+  return true;
+}
+
+CombineXCone3noNearestLep_gen::CombineXCone3noNearestLep_gen(uhh2::Context & ctx, bool isTTbar, const std::string & name_nolep, const std::string & name_fat):
+h_GENxcone3noNearestLepjets(ctx.declare_event_output<std::vector<GenTopJet>>(name_nolep)),
+h_GENfatjets(ctx.get_handle<std::vector<GenTopJet>>(name_fat)),
+h_ttbargen(ctx.get_handle<TTbarGen>("ttbargen")),
+isTTbar_ (isTTbar) {}
+
+bool CombineXCone3noNearestLep_gen::process(uhh2::Event & event) {
+  //---------------------------------------------------------------------------------------
+  //--------------------------------- get subjets and lepton ------------------------------
+  //---------------------------------------------------------------------------------------
+  GenParticle lepton;
+  std::vector<GenTopJet> jets = event.get(h_GENfatjets);
+  CombineXCone* combine = new CombineXCone();
+  //---------------------------------------------------------------------------------------
+  //-------- set Lorentz Vectors of subjets and combine them ------------------------------
+  //---------------------------------------------------------------------------------------
+  std::vector<GenTopJet> combinedJets;
+  vector<GenTopJet> nolepjets;
+  GenTopJet combinedJet;
+
+  if(isTTbar_) {
+    TTbarGen ttbargen = event.get(h_ttbargen);
+    if(ttbargen.IsSemiLeptonicDecay()) {
+      lepton = ttbargen.ChargedLepton();
+
+      double minDR = 999.0;
+      uint minI = 7;
+      double tmpDR;
+
+      for(uint i=0; i<jets.size(); i++) {
+        tmpDR = deltaR(lepton, jets.at(i));
+        if(tmpDR < minDR) {
+          minDR = tmpDR;
+          minI = i;
+        }
+      }
+
+      if(deltaR(lepton, jets.at(minI)) > 1.2) minI = 7;
+
+      for(uint i=0; i<jets.size(); i++) {
+        if(i != minI) {
+          combinedJet = combine->CreateTopJetFromSubjets_gen(jets.at(i).subjets(), 0, 2.5);
+          combinedJet.set_tau1(jets.at(i).tau1());
+          combinedJet.set_tau2(jets.at(i).tau2());
+          combinedJet.set_tau3(jets.at(i).tau3());
+          combinedJet.set_tau4(jets.at(i).tau4());
+          combinedJet.set_tau1_groomed(jets.at(i).tau1_groomed());
+          combinedJet.set_tau2_groomed(jets.at(i).tau2_groomed());
+          combinedJet.set_tau3_groomed(jets.at(i).tau3_groomed());
+          combinedJet.set_tau4_groomed(jets.at(i).tau4_groomed());
+          nolepjets.push_back(combinedJet);
+        }
+      }
+    }
+  }
+
+  
+
+  //---------------------------------------------------------------------------------------
+  //--------------------------------- Write Jets ------------------------------------------
+  //---------------------------------------------------------------------------------------
+  event.set(h_GENxcone3noNearestLepjets, nolepjets);
 
   // delete combine;
   return true;

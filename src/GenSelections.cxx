@@ -10,7 +10,7 @@ bool uhh2::SubjetQuality_gen::passes(const uhh2::Event& event){
   bool pass = true;
   std::vector<GenTopJet> jets = event.get(h_jets);
   if(jets.size() == 0) return false;
-  std::vector<GenJet> subjets = jets[0].subjets();
+  auto subjets = jets.at(0).subjets();
   if(subjets.size() != 3) pass = false;
   for(auto subjet: subjets){
     if(subjet.pt() < ptmin) pass = false;
@@ -553,6 +553,7 @@ bool uhh2::Matching_top::passes(const uhh2::Event& event){
   if((deltaR(bot, jet1)<=jetradius_) && (deltaR(q1, jet1)<=jetradius_) && (deltaR(q2, jet1)<=jetradius_)) matched = true;
   return matched;
 }
+
 ////////////////////////////////////////////////////////
 
 uhh2::LeadingJetPT::LeadingJetPT(uhh2::Context& ctx, const std::string & name, float ptcut):
@@ -571,10 +572,11 @@ bool uhh2::LeadingJetPT::passes(const uhh2::Event& event){
   return pass_jetpt;
 }
 
+////////////////////////////////////////////////////////
+
 uhh2::LeadingJetPT_gen::LeadingJetPT_gen(uhh2::Context& ctx, const std::string & name, float ptcut):
 h_jets(ctx.get_handle<std::vector<GenTopJet>>(name)),
 ptcut_(ptcut) {}
-////////////////////////////////////////////////////////
 
 bool uhh2::LeadingJetPT_gen::passes(const uhh2::Event& event){
   bool pass_jetpt = false;
@@ -587,6 +589,170 @@ bool uhh2::LeadingJetPT_gen::passes(const uhh2::Event& event){
   }
   return pass_jetpt;
 }
+////////////////////////////////////////////////////////
+
+uhh2::LeadingJetPTRange_gen::LeadingJetPTRange_gen(uhh2::Context& ctx, const std::string & name, float ptmin, float ptmax):
+h_jets(ctx.get_handle<std::vector<GenTopJet>>(name)),
+ptmin_(ptmin),
+ptmax_(ptmax) {}
+
+bool uhh2::LeadingJetPTRange_gen::passes(const uhh2::Event& event){
+  bool pass_jetptrange = false;
+  std::vector<GenTopJet> jets = event.get(h_jets);
+  GenTopJet jet1;
+  if(jets.size()>0){
+    jet1 = jets.at(0);
+    float pt = jet1.pt();
+    if(pt >= ptmin_ && pt < ptmax_) pass_jetptrange = true;
+  }
+  return pass_jetptrange;
+}
+
+////////////////////////////////////////////////////////
+
+uhh2::JetsPT_gen::JetsPT_gen(uhh2::Context& ctx, const std::string & name, float ptcut, float dR):
+h_jets(ctx.get_handle<std::vector<GenTopJet>>(name)),
+ptcut_(ptcut),
+dR_(dR) {}
+
+bool uhh2::JetsPT_gen::passes(const uhh2::Event& event){
+  bool pass_jetpt = false;
+  std::vector<GenTopJet> jets = event.get(h_jets);
+  TLorentzVector jet1_v4, jet2_v4;
+  if(jets.size()>1) {
+    jet1_v4.SetPxPyPzE(jets.at(0).v4().Px(), jets.at(0).v4().Py(), jets.at(0).v4().Pz(), jets.at(0).v4().E());
+    jet2_v4.SetPxPyPzE(jets.at(1).v4().Px(), jets.at(1).v4().Py(), jets.at(1).v4().Pz(), jets.at(1).v4().E());
+
+    if(deltaR(jets.at(0), jets.at(1)) > dR_) {
+      float pt = jet1_v4.Pt();
+      if(pt > ptcut_) pass_jetpt = true;
+    } else {
+      jet1_v4 += jet2_v4;
+      float pt = jet1_v4.Pt();
+      if(pt > ptcut_) pass_jetpt = true;
+    }
+    
+  }
+  return pass_jetpt;
+}
+
+////////////////////////////////////////////////////////
+
+uhh2::JetsPTOnlySmalldR_gen::JetsPTOnlySmalldR_gen(uhh2::Context& ctx, const std::string & name, float ptcut, float dR):
+h_jets(ctx.get_handle<std::vector<GenTopJet>>(name)),
+ptcut_(ptcut),
+dR_(dR) {}
+
+bool uhh2::JetsPTOnlySmalldR_gen::passes(const uhh2::Event& event){
+  bool pass_jetpt = false;
+  std::vector<GenTopJet> jets = event.get(h_jets);
+  TLorentzVector jet1_v4, jet2_v4;
+  if(jets.size()>1) {
+    jet1_v4.SetPxPyPzE(jets.at(0).v4().Px(), jets.at(0).v4().Py(), jets.at(0).v4().Pz(), jets.at(0).v4().E());
+    jet2_v4.SetPxPyPzE(jets.at(1).v4().Px(), jets.at(1).v4().Py(), jets.at(1).v4().Pz(), jets.at(1).v4().E());
+
+    if(deltaR(jets.at(0), jets.at(1)) < dR_) {
+      jet1_v4 += jet2_v4;
+      float pt = jet1_v4.Pt();
+      if(pt > ptcut_) pass_jetpt = true;
+    }
+    
+  }
+  return pass_jetpt;
+}
+
+////////////////////////////////////////////////////////
+
+uhh2::JetsPTRangeVariedDR_gen::JetsPTRangeVariedDR_gen(uhh2::Context& ctx, const std::string & name, bool doPtdR, float dR, float ptmin, float ptmax):
+h_jets(ctx.get_handle<std::vector<GenTopJet>>(name)),
+ptmin_(ptmin),
+ptmax_(ptmax),
+dR_(dR),
+doPtdR_(doPtdR) {}
+
+bool uhh2::JetsPTRangeVariedDR_gen::passes(const uhh2::Event& event){
+  bool pass_jetpt = false;
+  std::vector<GenTopJet> jets = event.get(h_jets);
+  TLorentzVector jet1_v4, jet2_v4, jet_v4_combined;
+  float pt;
+  float dRreal = dR_;
+  if(jets.size()>1) {
+    jet1_v4.SetPxPyPzE(jets.at(0).v4().Px(), jets.at(0).v4().Py(), jets.at(0).v4().Pz(), jets.at(0).v4().E());
+    jet2_v4.SetPxPyPzE(jets.at(1).v4().Px(), jets.at(1).v4().Py(), jets.at(1).v4().Pz(), jets.at(1).v4().E());
+
+    jet_v4_combined = jet1_v4 + jet2_v4;
+
+    if(doPtdR_ && jet_v4_combined.Pt() != 0) dRreal /= jet_v4_combined.Pt();
+
+    if(jet_v4_combined.Pt() != 0 && deltaR(jets.at(0), jets.at(1)) < dRreal) {
+      pt = jet_v4_combined.Pt();
+    } else {
+      pt = jet1_v4.Pt();
+    }
+    if(pt > ptmin_ && pt < ptmax_) pass_jetpt = true;
+    
+  }
+  return pass_jetpt;
+}
+
+////////////////////////////////////////////////////////
+
+uhh2::CloseTopGluonGen::CloseTopGluonGen(uhh2::Context& ctx, float dR):
+h_ttbargen(ctx.get_handle<TTbarGen>("ttbargen")),
+dR_(dR) {}
+
+vector<GenParticle> gluonsInEventSel(const Event & event) {
+  std::vector<GenParticle> *genparticles = event.genparticles;
+  int nparts = genparticles->size();
+  
+  vector<GenParticle> gluons;
+  //look for outgoing gluons in jet
+  for(int i=0; i<nparts; ++i) {
+    GenParticle* p = &(genparticles->at(i));
+
+    auto mother1 = p->mother(genparticles,1);
+    auto mother2 = p->mother(genparticles,2);
+
+    if(mother1 != nullptr && mother2 != nullptr) {
+      if(abs(p->pdgId()) != 6 && mother1->status() == 21 && mother2->status() == 21) {
+        if(p->pt() > 20) gluons.push_back(*p);
+      }
+    }
+  }
+
+  return gluons;
+}
+
+bool uhh2::CloseTopGluonGen::passes(const uhh2::Event& event){
+  bool pass_topGluon = false;
+  const auto & ttbargen = event.get(h_ttbargen);
+  GenParticle top;
+  if(ttbargen.IsTopHadronicDecay()) top = ttbargen.Top();
+  else top = ttbargen.Antitop();
+
+  std::vector<GenParticle> gluons = gluonsInEventSel(event);
+  if(gluons.size() > 0) {
+    if(deltaR(top, gluons.at(0)) < dR_) pass_topGluon = true;
+  }
+
+  return pass_topGluon;
+}
+
+////////////////////////////////////////////////////////
+
+uhh2::CloseJetsGen::CloseJetsGen(uhh2::Context& ctx, std::string & name, float dR):
+h_genJets(ctx.get_handle<std::vector<GenTopJet>>(name)),
+dR_(dR) {}
+
+bool uhh2::CloseJetsGen::passes(const uhh2::Event& event){
+  bool pass_closeJets = false;
+  std::vector<GenTopJet> jets = event.get(h_genJets);
+  
+  if(jets.size()>1 && deltaR(jets.at(0), jets.at(1)) < dR_) pass_closeJets = true;
+
+  return pass_closeJets;
+}
+
 ////////////////////////////////////////////////////////
 
 uhh2::LeadingTopJetPT::LeadingTopJetPT(uhh2::Context& ctx, float ptcut):
@@ -644,6 +810,7 @@ bool uhh2::MassCut::passes(const uhh2::Event& event){
   }
   return pass_masscut;
 }
+
 ////////////////////////////////////////////////////////
 
 uhh2::MassCut_gen::MassCut_gen(uhh2::Context& ctx, const std::string & hadname, const std::string & lepname):
@@ -663,6 +830,34 @@ bool uhh2::MassCut_gen::passes(const uhh2::Event& event){
   bool pass_masscut = false;
   if(hadjets.size()>0 && lepjets.size()>0){
     jet1_v4 = hadjets.at(0).v4();
+    if(is_semilep) jet2_v4 = lepjets.at(0).v4() + lepton.v4();
+    else           jet2_v4 = lepjets.at(0).v4();
+    if(jet1_v4.M() > jet2_v4.M()) pass_masscut = true;
+  }
+  return pass_masscut;
+}
+
+////////////////////////////////////////////////////////
+
+uhh2::MassCut3Jets_gen::MassCut3Jets_gen(uhh2::Context& ctx, const std::string & hadname, const std::string & lepname, float dR):
+h_hadjets(ctx.get_handle<std::vector<GenTopJet>>(hadname)),
+h_lepjets(ctx.get_handle<std::vector<GenTopJet>>(lepname)),
+h_ttbargen(ctx.get_handle<TTbarGen>("ttbargen")),
+dR_(dR) {}
+
+bool uhh2::MassCut3Jets_gen::passes(const uhh2::Event& event) {
+  std::vector<GenTopJet> hadjets = event.get(h_hadjets);
+  std::vector<GenTopJet> lepjets = event.get(h_lepjets);
+  const auto & ttbargen = event.get(h_ttbargen);
+
+  GenParticle lepton = ttbargen.ChargedLepton();
+  bool is_semilep = ttbargen.IsSemiLeptonicDecay();
+
+  LorentzVector jet1_v4, jet2_v4;
+  bool pass_masscut = false;
+  if(hadjets.size()>0) jet1_v4 = hadjets.at(0).v4();
+  if(hadjets.size()>1 && deltaR(hadjets.at(0), hadjets.at(1))<1.2) jet1_v4 = hadjets.at(0).v4() + hadjets.at(1).v4();
+  if(hadjets.size()>0 && lepjets.size()>0) {
     if(is_semilep) jet2_v4 = lepjets.at(0).v4() + lepton.v4();
     else           jet2_v4 = lepjets.at(0).v4();
     if(jet1_v4.M() > jet2_v4.M()) pass_masscut = true;

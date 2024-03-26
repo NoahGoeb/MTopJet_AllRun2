@@ -115,6 +115,16 @@ bool RemoveLeptonGen::process(uhh2::Event & event){
       }
     }
     for(auto subjet: new_subjets) new_topjet.add_subjet(subjet);
+
+    new_topjet.set_tau1(topjets.at(i).tau1());
+    new_topjet.set_tau2(topjets.at(i).tau2());
+    new_topjet.set_tau3(topjets.at(i).tau3());
+    new_topjet.set_tau4(topjets.at(i).tau4());
+    new_topjet.set_tau1_groomed(topjets.at(i).tau1_groomed());
+    new_topjet.set_tau2_groomed(topjets.at(i).tau2_groomed());
+    new_topjet.set_tau3_groomed(topjets.at(i).tau3_groomed());
+    new_topjet.set_tau4_groomed(topjets.at(i).tau4_groomed());
+
     new_topjets.push_back(new_topjet);
   }
 

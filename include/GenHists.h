@@ -39,4 +39,6 @@ protected:
 
     uhh2::Event::Handle<TTbarGen>h_ttbargen;
     uhh2::Event::Handle<std::vector<TopJet>>h_jets;
+
+    bool debug;
 };

@@ -169,7 +169,7 @@ MTopJetSelectionModule::MTopJetSelectionModule(uhh2::Context& ctx){
   //======================= YearSwitcher =======================================
   bool year_16 = false;
   bool year_17 = false;
-  bool year_18 = false;
+  bool year_18 = true;
   year = extract_year(ctx);
 
   if(year == Year::is2016v3) year_16 = true;

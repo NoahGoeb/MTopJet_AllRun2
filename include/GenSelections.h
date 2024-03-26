@@ -199,6 +199,17 @@ namespace uhh2 {
     float jetradius_;
   };
 
+  class Decay_Same_Subjet_Sel_Gen : public Selection {
+
+  public:
+    explicit Decay_Same_Subjet_Sel_Gen(Context&, float);
+    virtual bool passes(const Event&) override;
+
+  private:
+    uhh2::Event::Handle<std::vector<GenTopJet>> h_gentopjets;
+    uhh2::Event::Handle<TTbarGen> h_ttbargen;
+    float jetradius_;
+  };
 
   class LeadingJetPT : public Selection {
 
@@ -222,6 +233,77 @@ namespace uhh2 {
     float ptcut_;
   };
 
+  class LeadingJetPTRange_gen : public Selection {
+
+  public:
+    explicit LeadingJetPTRange_gen(Context&, const std::string &, float, float);
+    virtual bool passes(const Event&) override;
+
+  private:
+    uhh2::Event::Handle<std::vector<GenTopJet>> h_jets;
+    float ptmin_;
+    float ptmax_;
+  };
+
+  class JetsPT_gen : public Selection {
+
+  public:
+    explicit JetsPT_gen(Context&, const std::string &, float ,float);
+    virtual bool passes(const Event&) override;
+
+  private:
+    uhh2::Event::Handle<std::vector<GenTopJet>> h_jets;
+    float ptcut_;
+    float dR_;
+  };
+
+  class JetsPTOnlySmalldR_gen : public Selection {
+
+  public:
+    explicit JetsPTOnlySmalldR_gen(Context&, const std::string &, float ,float);
+    virtual bool passes(const Event&) override;
+
+  private:
+    uhh2::Event::Handle<std::vector<GenTopJet>> h_jets;
+    float ptcut_;
+    float dR_;
+  };
+
+  class JetsPTRangeVariedDR_gen : public Selection {
+
+  public:
+    explicit JetsPTRangeVariedDR_gen(Context&, const std::string &, bool, float, float, float);
+    virtual bool passes(const Event&) override;
+
+  private:
+    uhh2::Event::Handle<std::vector<GenTopJet>> h_jets;
+    float ptmin_;
+    float ptmax_;
+    float dR_;
+    bool doPtdR_;
+  };
+
+  class CloseTopGluonGen : public Selection {
+
+  public:
+    explicit CloseTopGluonGen(Context&, float);
+    virtual bool passes(const Event&) override;
+
+  private:
+    uhh2::Event::Handle<TTbarGen> h_ttbargen;
+    float dR_;
+  };
+
+  class CloseJetsGen : public Selection {
+
+  public:
+    explicit CloseJetsGen(Context&, std::string &, float);
+    virtual bool passes(const Event&) override;
+
+  private:
+    uhh2::Event::Handle<std::vector<GenTopJet>> h_genJets;
+    float dR_;
+  };
 
   class LeadingTopJetPT : public Selection {
 
@@ -255,6 +337,19 @@ namespace uhh2 {
     uhh2::Event::Handle<std::vector<GenTopJet>> h_hadjets;
     uhh2::Event::Handle<std::vector<GenTopJet>> h_lepjets;
     uhh2::Event::Handle<TTbarGen> h_ttbargen;
+  };
+
+  class MassCut3Jets_gen : public Selection {
+
+  public:
+    explicit MassCut3Jets_gen(Context&, const std::string &, const std::string &, float);
+    virtual bool passes(const Event&) override;
+
+  private:
+    uhh2::Event::Handle<std::vector<GenTopJet>> h_hadjets;
+    uhh2::Event::Handle<std::vector<GenTopJet>> h_lepjets;
+    uhh2::Event::Handle<TTbarGen> h_ttbargen;
+    float dR_;
   };
 
   class MassCut_top : public Selection {

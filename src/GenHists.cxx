@@ -1,5 +1,28 @@
 #include <UHH2/MTopJet/include/GenHists.h>
 
+#include <iostream>
+#include <fstream>
+#include <memory>
+
+#include <UHH2/core/include/AnalysisModule.h>
+#include <UHH2/core/include/Event.h>
+#include <UHH2/core/include/Selection.h>
+
+#include <UHH2/common/include/AdditionalSelections.h>
+#include <UHH2/common/include/CommonModules.h>
+#include <UHH2/common/include/TTbarGen.h>
+#include <UHH2/common/include/Utils.h>
+
+#include <UHH2/MTopJet/include/CombineXCone.h>
+#include <UHH2/MTopJet/include/GenHists_xcone.h>
+#include <UHH2/MTopJet/include/ControlHists.h>
+#include <UHH2/MTopJet/include/ModuleBASE.h>
+#include <UHH2/MTopJet/include/StoreBJet.h>
+
+#include <UHH2/MTopJet/include/AnalysisOutput.h>
+#include <UHH2/MTopJet/include/GenSelections.h>
+#include <UHH2/MTopJet/include/MTopJetUtils.h> 
+
 using namespace uhh2;
 
 GenHists::GenHists(uhh2::Context & ctx, const std::string & dirname, const std::string & jetname): Hists(ctx, dirname){
@@ -106,12 +129,15 @@ GenHists::GenHists(uhh2::Context & ctx, const std::string & dirname, const std::
   h_ttbargen=ctx.get_handle<TTbarGen>("ttbargen");
   // handle for clustered jets
   h_jets=ctx.get_handle<std::vector<TopJet>>(jetname);
+
+  debug = string2bool(ctx.get("Debug","false"));
 }
 
 
 
 void GenHists::fill(const Event & event){
 
+  if(debug) cout << "--- fill GenHists ---" << endl;
   //---------------------------------------------------------------------------------------
   //--------------------------------- get first 13 gen parts -------------------------------
   //---------------------------------------------------------------------------------------
@@ -129,12 +155,16 @@ void GenHists::fill(const Event & event){
   //---------------------------------------------------------------------------------------
   //--------------------------------- define needed objects-----------------------------------
   //---------------------------------------------------------------------------------------
+  if(debug) cout << "\t--- define needed objects" << endl;
   const auto & ttbargen = event.get(h_ttbargen);
   // define all objects needed
+  if(debug) cout << "\t\t--- get jets" << endl;
   std::vector<TopJet> jets = event.get(h_jets);
   TLorentzVector jet1_v4, jet2_v4, lepton1_v4, jet2_lep_v4, topjet1_v4, topjet2_v4;
   TopJet jet1,jet2,jet3,jet4,jet5,jet6;
+  if(debug) cout << "\t\t--- get jet1" << endl;
   if(jets.size()>0) jet1 = jets.at(0);
+  if(debug) cout << "\t\t--- get jet2" << endl;
   if(jets.size()>1) jet2 = jets.at(1);
   // if(jets.size()>2) jet3 = jets.at(2);
   // if(jets.size()>3) jet4 = jets.at(3);
@@ -147,6 +177,7 @@ void GenHists::fill(const Event & event){
   //---------------------------------------------------------------------------------------
   //--------------------------------- Matching --------------------------------------------
   //---------------------------------------------------------------------------------------
+  if(debug) cout << "\t--- Matching" << endl;
   // bool matched = false;
   // get stable particles from ttbar decay and sort them into leptonic and hadronic
   GenParticle bot, q1, q2, bot_lep, lep1, lep2, lepton; //leptons already defined above
@@ -186,6 +217,7 @@ void GenHists::fill(const Event & event){
   //---------------------------------------------------------------------------------------
   //-------- set Lorentz Vectors of 2 jets and lepton -------------------=-----------------
   //---------------------------------------------------------------------------------------
+  if(debug) cout << "\t--- Lorentz Vectors" << endl;
    if(jets.size() > 1){
      jet1_v4.SetPxPyPzE(jets.at(0).v4().Px(), jets.at(0).v4().Py(), jets.at(0).v4().Pz(), jets.at(0).v4().E());
      jet2_v4.SetPxPyPzE(jets.at(1).v4().Px(), jets.at(1).v4().Py(), jets.at(1).v4().Pz(), jets.at(1).v4().E()); //v4 of first jet
@@ -202,6 +234,7 @@ void GenHists::fill(const Event & event){
   //--------------------------------- Fill Hists here -------------------------------------
   //---------------------------------------------------------------------------------------
 
+  if(debug) cout << "\t--- Fill Hists" << endl;
   // get weight
   double weight = event.weight;
   ////
@@ -352,6 +385,7 @@ void GenHists::fill(const Event & event){
   //---------------------------------------------------------------------------------------
   //--------------------------------- Clear all used objects ------------------------------
   //---------------------------------------------------------------------------------------
+  if(debug) cout << "\t--- Clear all used objects" << endl;
   jet1_v4.Delete();
   jet2_v4.Delete();
   lepton1_v4.Delete();

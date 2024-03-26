@@ -18,6 +18,8 @@
 #include "UHH2/common/include/YearRunSwitchers.h"
 
 // Hists
+#include <UHH2/MTopJet/include/CombineXCone.h>
+#include <UHH2/MTopJet/include/GenHists_GenOnly.h>
 #include <UHH2/common/include/ElectronHists.h>
 #include <UHH2/common/include/EventHists.h>
 #include <UHH2/common/include/MuonHists.h>
@@ -29,6 +31,9 @@
 #include <UHH2/MTopJet/include/RecoSelections.h>
 #include <UHH2/MTopJet/include/GenSelections.h>
 #include <UHH2/MTopJet/include/MTopJetUtils.h>
+
+#include <UHH2/MTopJet/include/ControlHists.h>
+
 
 using namespace std;
 
@@ -56,6 +61,12 @@ protected:
 
   std::unique_ptr<uhh2::AnalysisModule> ttgenprod;
 
+  //hists rec
+  std::unique_ptr<Hists> h_lep1, h_met, h_lepsel, h_fatpt;
+  //hists gen
+  std::unique_ptr<Hists> h_semilep, h_genpt, h_genlepton;
+  std::unique_ptr<Hists> h_decay_same_jet_gen;
+
   // handles for output
   Event::Handle<bool>h_recsel;
   Event::Handle<bool>h_gensel;
@@ -72,6 +83,8 @@ protected:
   std::unique_ptr<Hists> h_ttbar;
 
   //Year year;
+
+
 };
 
 /*
@@ -150,6 +163,17 @@ MTopJetPreSelectionModule::MTopJetPreSelectionModule(uhh2::Context& ctx){
   }
   ////
 
+  h_lep1.reset(new CountingEventHists(ctx, "h_lep1"));
+  h_met.reset(new CountingEventHists(ctx, "h_met"));
+  h_fatpt.reset(new CountingEventHists(ctx, "h_fatpt"));
+  h_lepsel.reset(new CountingEventHists(ctx, "h_lepsel"));
+
+  h_semilep.reset(new CountingEventHists(ctx, "h_semilep"));
+  h_genlepton.reset(new CountingEventHists(ctx, "h_genlepton"));
+  h_genpt.reset(new CountingEventHists(ctx, "h_genpts"));
+
+  h_decay_same_jet_gen.reset(new GenHists_GenOnly(ctx, "decay_same_jet_gen", "genXCone33TopJets"));
+
 }
 
 /*
@@ -227,7 +251,10 @@ bool MTopJetPreSelectionModule::process(uhh2::Event& event){
       }
       jet_v4.SetPxPyPzE(px, py, pz, E);
       double pt = jet_v4.Pt();
-      if(pt > 330) passed_genpt = true;
+      if(pt > 330) {
+        passed_genpt = true;
+        h_decay_same_jet_gen->fill(event);
+      }
     }
   }
   ///
@@ -237,6 +264,15 @@ bool MTopJetPreSelectionModule::process(uhh2::Event& event){
 
   if(pass_semilep && passed_genpt && pass_genlepton) passed_gensel = true;
   else passed_gensel = false;
+
+  if(pass_lep1) h_lep1->fill(event);
+  if(pass_lep1 && pass_met) h_met->fill(event);
+  if(pass_lep1 && pass_met && passed_fatpt) h_fatpt->fill(event);
+  if(pass_lep1 && pass_met && passed_fatpt && pass_lepsel) h_lepsel->fill(event);
+
+  if(pass_semilep) h_semilep->fill(event);
+  if(pass_semilep && pass_genlepton) h_genlepton->fill(event);
+  if(pass_semilep && pass_genlepton && passed_genpt) h_genpt->fill(event);
 
   if(!passed_recsel && !passed_gensel) return false;
 

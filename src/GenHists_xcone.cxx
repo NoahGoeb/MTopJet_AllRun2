@@ -68,7 +68,9 @@ void GenHists_xcone::fill(const Event & event){
   //std::vector<GenTopJet> softdrop = event.get(h_softdrop);
   const auto & ttbargen = event.get(h_ttbargen);
 
-  if(hadjets33.size() == 0 || lepjets33.size() == 0) return;
+  if(hadjets33.size() == 0 || lepjets33.size() == 0) {
+    return;
+  }
 
   GenTopJet had33 = hadjets33.at(0);
   GenTopJet lep33 = lepjets33.at(0);
