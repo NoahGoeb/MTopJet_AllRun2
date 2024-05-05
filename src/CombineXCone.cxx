@@ -465,10 +465,10 @@ bool CombineXCone3all_gen::process(uhh2::Event & event){
     combinedJet.set_tau2(jets.at(i).tau2());
     combinedJet.set_tau3(jets.at(i).tau3());
     combinedJet.set_tau4(jets.at(i).tau4());
-    combinedJet.set_tau1_groomed(jets.at(i).tau1_groomed());
+    /*combinedJet.set_tau1_groomed(jets.at(i).tau1_groomed());
     combinedJet.set_tau2_groomed(jets.at(i).tau2_groomed());
     combinedJet.set_tau3_groomed(jets.at(i).tau3_groomed());
-    combinedJet.set_tau4_groomed(jets.at(i).tau4_groomed());
+    combinedJet.set_tau4_groomed(jets.at(i).tau4_groomed());*/
     alljets.push_back(combinedJet);
   }
 
@@ -521,10 +521,10 @@ bool CombineXCone3nolep_gen::process(uhh2::Event & event){
         combinedJet.set_tau2(jets.at(i).tau2());
         combinedJet.set_tau3(jets.at(i).tau3());
         combinedJet.set_tau4(jets.at(i).tau4());
-        combinedJet.set_tau1_groomed(jets.at(i).tau1_groomed());
+        /*combinedJet.set_tau1_groomed(jets.at(i).tau1_groomed());
         combinedJet.set_tau2_groomed(jets.at(i).tau2_groomed());
         combinedJet.set_tau3_groomed(jets.at(i).tau3_groomed());
-        combinedJet.set_tau4_groomed(jets.at(i).tau4_groomed());
+        combinedJet.set_tau4_groomed(jets.at(i).tau4_groomed());*/
         if(deltaR(lepton, jets.at(i)) > dRreal) {
           nolepjets.push_back(combinedJet);
         }
@@ -594,10 +594,10 @@ bool CombineXCone3top_gluon_gen::process(uhh2::Event & event) {
         combinedJet.set_tau2(jets.at(i).tau2());
         combinedJet.set_tau3(jets.at(i).tau3());
         combinedJet.set_tau4(jets.at(i).tau4());
-        combinedJet.set_tau1_groomed(jets.at(i).tau1_groomed());
+        /*combinedJet.set_tau1_groomed(jets.at(i).tau1_groomed());
         combinedJet.set_tau2_groomed(jets.at(i).tau2_groomed());
         combinedJet.set_tau3_groomed(jets.at(i).tau3_groomed());
-        combinedJet.set_tau4_groomed(jets.at(i).tau4_groomed());
+        combinedJet.set_tau4_groomed(jets.at(i).tau4_groomed());*/
         if(deltaR(lepton, jets.at(i)) < dRreal) {
           lepjets.push_back(combinedJet);
         } else if(deltaR(top, jets.at(i)) < dRreal) {
@@ -668,10 +668,10 @@ bool CombineXCone3noNearestLep_gen::process(uhh2::Event & event) {
           combinedJet.set_tau2(jets.at(i).tau2());
           combinedJet.set_tau3(jets.at(i).tau3());
           combinedJet.set_tau4(jets.at(i).tau4());
-          combinedJet.set_tau1_groomed(jets.at(i).tau1_groomed());
+          /*combinedJet.set_tau1_groomed(jets.at(i).tau1_groomed());
           combinedJet.set_tau2_groomed(jets.at(i).tau2_groomed());
           combinedJet.set_tau3_groomed(jets.at(i).tau3_groomed());
-          combinedJet.set_tau4_groomed(jets.at(i).tau4_groomed());
+          combinedJet.set_tau4_groomed(jets.at(i).tau4_groomed());*/
           nolepjets.push_back(combinedJet);
         }
       }

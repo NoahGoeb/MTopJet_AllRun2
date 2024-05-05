@@ -1,7 +1,7 @@
 <!-- <?xml version="1.0" encoding="UTF-8"?> -->
 <!DOCTYPE JobConfiguration PUBLIC "" "JobConfig.dtd" [
 
-<!ENTITY NEVT "-1">
+<!ENTITY NEVT "10000">
 
 <!ENTITY channel "muon">
 <!ENTITY debug "false">

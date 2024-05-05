@@ -220,6 +220,7 @@ void MTopJetGenPostSelectionModule::init_MC_hists(uhh2::Context& ctx){
   h_XCone_GEN_Sel_ptsub.reset(new GenHists_xcone(ctx, "XCone_GEN_Sel_ptsub"));
 
   if(debug) cout << "-decay_same_jet-" << endl;
+  
   h_decay_same_jet_gen.reset(new GenHists_GenOnly(ctx, "decay_same_jet_gen", "GEN_XCone33_had_Combined"));
 
   h_decay_same_jet_gen_count.reset(new CountingEventHists(ctx, "decay_same_jet_gen_count"));
@@ -237,6 +238,7 @@ void MTopJetGenPostSelectionModule::init_MC_hists(uhh2::Context& ctx){
   h_decay_same_jet_pt8002000_gen.reset(new GenHists_GenOnly(ctx, "decay_same_jet_pt8002000_gen", "GEN_XCone33_had_Combined"));
   h_decay_same_jet_pt9002000_gen.reset(new GenHists_GenOnly(ctx, "decay_same_jet_pt9002000_gen", "GEN_XCone33_had_Combined"));
 
+  /*
   h_alljets_gen.reset(new GenHists_GenOnly(ctx, "alljets_gen", "GEN_XCone3_all_Combined"));
   h_nolepjets_gen.reset(new GenHists_GenOnly(ctx, "nolepjets_gen", "GEN_XCone3_nolep_Combined_dR12"));
   if(debug) cout << "-after nolepjet_gen reached-" << endl;
@@ -284,7 +286,7 @@ void MTopJetGenPostSelectionModule::init_MC_hists(uhh2::Context& ctx){
   h_genNoLep_pT800.reset(new GenHists_GenNoLep(ctx, "genNoLep_pT800", "GEN_XCone3_nolep_Combined_dR12", 1.2));
   h_genNoLep_pT900.reset(new GenHists_GenNoLep(ctx, "genNoLep_pT900", "GEN_XCone3_nolep_Combined_dR12", 1.2));
   h_genNoLep_closeGluonTop.reset(new GenHists_GenNoLep(ctx, "genNoLep_closeGluonTop", "GEN_XCone3_nolep_Combined_dR12", 1.2));
-
+  */
   h_highestPtSorted.reset(new CountingEventHists(ctx, "highestPtSorted"));
 
   if(debug) cout << "-end of init reached-" << endl;
@@ -332,6 +334,7 @@ MTopJetGenPostSelectionModule::MTopJetGenPostSelectionModule(uhh2::Context& ctx)
   scale_variation.reset(new MCScaleVariation(ctx));
 
   jetprod_gen.reset(new CombineXCone33_gen(ctx, true)); // keep true for now, since you look only at ttbar
+  /*
   jetprod_gen1.reset(new CombineXCone3all_gen(ctx, 3, "GEN_XCone3_all_Combined", "genXCone3TopJets"));
   jetprod_gen2.reset(new CombineXCone3nolep_gen(ctx, true, false, 1.2, "GEN_XCone3_nolep_Combined_dR12", "genXCone3TopJets"));
   jetprod_gen3.reset(new CombineXCone3noNearestLep_gen(ctx, true, "GEN_XCone3_noNearestLep_Combined", "genXCone3TopJets"));
@@ -346,6 +349,7 @@ MTopJetGenPostSelectionModule::MTopJetGenPostSelectionModule(uhh2::Context& ctx)
   jetprod_gen12.reset(new CombineXCone3nolep_gen(ctx, true, true, 350, "GEN_XCone3_nolep_Combined_dR350varied", "genXCone3TopJets"));
   jetprod_gen13.reset(new CombineXCone3nolep_gen(ctx, true, true, 450, "GEN_XCone3_nolep_Combined_dR450varied", "genXCone3TopJets"));
   jetprod_gen14.reset(new CombineXCone3nolep_gen(ctx, true, true, 600, "GEN_XCone3_nolep_Combined_dR600varied", "genXCone3TopJets"));
+  */
 
   // //////////////
   // Access genjets
@@ -359,9 +363,11 @@ MTopJetGenPostSelectionModule::MTopJetGenPostSelectionModule(uhh2::Context& ctx)
   // GEN_XCone33_had_Combined produces in CombineXCone33_gen, so define afterwards
   // Only hadronic nowSubjet
   h_genjets33_had = ctx.get_handle<std::vector<GenTopJet>>("GEN_XCone33_had_Combined");
+  /*
   h_genall3fatjets = ctx.get_handle<std::vector<GenTopJet>>("GEN_XCone3_all_Combined");
   h_gen3nolepjets = ctx.get_handle<std::vector<GenTopJet>>("GEN_XCone3_nolep_Combined_dR12");
   h_gen3noNearestLepjets = ctx.get_handle<std::vector<GenTopJet>>("GEN_XCone3_noNearestLep_Combined");
+  */
 
   // /////////////////
   // Define Selections
@@ -403,6 +409,7 @@ MTopJetGenPostSelectionModule::MTopJetGenPostSelectionModule(uhh2::Context& ctx)
   ptrange8002000_gensel.reset(new LeadingJetPTRange_gen(ctx, "GEN_XCone33_had_Combined", 800, 2000));
   ptrange9002000_gensel.reset(new LeadingJetPTRange_gen(ctx, "GEN_XCone33_had_Combined", 900, 2000));
 
+  /*
   if(debug) cout << "\t--- top pt cut selections" << endl;
   pt_gensel_3jets.reset(new LeadingJetPT_gen(ctx, "GEN_XCone3_top_Combined_dR12", 400));
   if(debug) cout << "\t--- lep pt cut selections" << endl;
@@ -435,7 +442,7 @@ MTopJetGenPostSelectionModule::MTopJetGenPostSelectionModule(uhh2::Context& ctx)
   ptrange9002000_variedDR_gensel_3jets_12.reset(new JetsPTRangeVariedDR_gen(ctx, "GEN_XCone3_nolep_Combined_dR12", false, 1.2, 900, 2000));
 
   ptrange700900_gensel_3jets.reset(new LeadingJetPTRange_gen(ctx, "GEN_XCone3_top_Combined_dR12", 700, 900));
-
+  */
   closeTopGluon.reset(new CloseTopGluonGen(ctx, 1.2));
 
   // /////////////////////////
@@ -496,6 +503,7 @@ bool MTopJetGenPostSelectionModule::process(uhh2::Event& event){
 
   ttgenprod->process(event);
   jetprod_gen->process(event);
+  /*
   jetprod_gen1->process(event);
   jetprod_gen2->process(event);
   jetprod_gen3->process(event);
@@ -510,6 +518,7 @@ bool MTopJetGenPostSelectionModule::process(uhh2::Event& event){
   jetprod_gen12->process(event);
   jetprod_gen13->process(event);
   jetprod_gen14->process(event);
+  */
 
   // ////////////////////
   if(debug) cout << "\t\t--- before passed gensel" << endl;
@@ -519,7 +528,7 @@ bool MTopJetGenPostSelectionModule::process(uhh2::Event& event){
   // /////////////////////////
   // Get Objects from rootfile
   if(debug) cout << "\t--- Get handles" << endl;
-
+  /*
   vector<GenTopJet> gen_alljets3 = event.get(h_genall3fatjets);
   if(debug) cout << "alljets size = " << gen_alljets3.size() << endl;
 
@@ -569,6 +578,7 @@ bool MTopJetGenPostSelectionModule::process(uhh2::Event& event){
     default:
       break;
   }
+  */
 
   //cout << gen_alljets3.size()-gen_nolepjets3.size() << endl;
 
@@ -700,6 +710,7 @@ bool MTopJetGenPostSelectionModule::process(uhh2::Event& event){
   pass_ptrange8002000_gen = pass_measurement_gen && ptrange8002000_gensel->passes(event);
   pass_ptrange9002000_gen = pass_measurement_gen && ptrange9002000_gensel->passes(event);
 
+  /*
   pass_measurement_gen_3jets = passed_gensel33 && pt_gensel_3jets->passes(event) && pt2_gensel_3jets->passes(event) && subjet_quality_gen_3jets->passes(event) && lepton_sel_gen_3jets->passes(event);
 
   pass_ptrange700900_gen_3jets = pass_measurement_gen_3jets && ptrange700900_gensel_3jets->passes(event);
@@ -729,7 +740,7 @@ bool MTopJetGenPostSelectionModule::process(uhh2::Event& event){
   pass_newPtCutRange9002000_variedDr_gen_3jets_12 = pass_newPtCut_gen_3jets && ptrange9002000_variedDR_gensel_3jets_12->passes(event);
 
   pass_newPtCutRange4002000_gen_3jets_12 = pass_newPtCut_gen_3jets && pt_gensel_3jets->passes(event);
-
+  */
   // Check of events passes selection
   // Use function with pointer: pointer->func()
   // Pointer points to memory location of object;
@@ -744,8 +755,9 @@ bool MTopJetGenPostSelectionModule::process(uhh2::Event& event){
   pass_subjet_quality_gen = pass_pt400cut_gen && subjet_quality_gen->passes(event);
   pass_subjet_quality_eta_gen = pass_pt400cut_gen && subjet_quality_eta_gen->passes(event);
 
-  pass_closeTopGluon = closeTopGluon->passes(event);
+  //pass_closeTopGluon = closeTopGluon->passes(event);
 
+  
   //double weight = event.weight;
   event.weight = event.get(h_weight);
 
@@ -789,6 +801,7 @@ bool MTopJetGenPostSelectionModule::process(uhh2::Event& event){
 
   }
 
+  /*
   h_alljets_gen->fill(event);
   h_nolepjets_gen->fill(event);
   h_noNearestLep_gen->fill(event);
@@ -831,7 +844,7 @@ bool MTopJetGenPostSelectionModule::process(uhh2::Event& event){
   if(pass_newPtCutRange9002000_variedDr_gen_3jets_12) h_genNoLep_pT900->fill(event);
 
   if(pass_newPtCutRange4002000_variedDR_gen_3jets_12 && pass_closeTopGluon) h_genNoLep_closeGluonTop->fill(event);
-
+  */
   // Fill handles for output
   if(debug) cout << "\t--- Set output" << endl;
   event.set(h_measure_gen, pass_pt400cut_gen); // either 0 or 1, but filled for all events

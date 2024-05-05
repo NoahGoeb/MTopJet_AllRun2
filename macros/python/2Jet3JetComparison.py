@@ -27,7 +27,7 @@ for i in range(len(histpath2Jet)):
     histogram5.SetLineWidth(2)
     histogram5.SetXTitle("m(GeV)")
     histogram5.SetYTitle("events")
-    histogram5.SetTitle("")
+    histogram5.SetTitle(names[i])
 
     histogram7 = file1.Get(histpath3Jet[i] + "jetMassNotCombinedOnly")
 
@@ -55,7 +55,7 @@ for i in range(len(histpath2Jet)):
     canvas.Modified()
     canvas.Update()
 
-    canvas.SaveAs(savepath + "jetMassLead2Jet3JetComparison" + names[i] + ".png")
+    canvas.SaveAs(savepath + "jetMassLead2Jet3JetComparison" + names[i] + ".pdf")
 
 
 
@@ -66,7 +66,7 @@ for i in range(len(histpath2Jet)):
     histogram5.SetLineWidth(2)
     histogram5.SetXTitle("m(GeV)")
     histogram5.SetYTitle("events")
-    histogram5.SetTitle("")
+    histogram5.SetTitle(names[i])
 
     histogram7 = file1.Get(histpath3Jet[i] + "jetMassCombinedOnlySubjetsMatched")
 
@@ -94,7 +94,7 @@ for i in range(len(histpath2Jet)):
     canvas.Modified()
     canvas.Update()
 
-    canvas.SaveAs(savepath + "jetMassLead2Jet3JetComparisonSubjetsMatched" + names[i] + ".png")
+    canvas.SaveAs(savepath + "jetMassLead2Jet3JetComparisonSubjetsMatched" + names[i] + ".pdf")
 
 # Close the ROOT file
 file1.Close()

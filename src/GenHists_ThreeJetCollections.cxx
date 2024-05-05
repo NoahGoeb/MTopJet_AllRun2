@@ -619,7 +619,7 @@ void GenHists_ThreeJetCollections::fill(const Event & event){
     lepJet_v4.push_back(tmp);
   }
 
-  bool isTTBar = true;
+  //bool isTTBar = true;
 
   // get stable particles from ttbar decay and sort them into leptonic and hadronic
     
@@ -644,7 +644,7 @@ void GenHists_ThreeJetCollections::fill(const Event & event){
     antitop = ttbargen.Top();
   } 
   else {
-    isTTBar = false;
+    //isTTBar = false;
     //cout << "-- no hadronic decay found" << endl;
   }
   //check which lep is neutrino and which is elec/muon
